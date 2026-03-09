@@ -1,0 +1,98 @@
+#!/bin/bash
+trap salir EXIT
+trap salir SIGHUP
+trap salir SIGINT
+trap salir SIGKILL
+trap salir SIGQUIT
+
+DOMAIN=$1
+HOST=$2
+SSHUSER=${3:-""}
+CURRENTUSER=$USER
+salir() {
+    echo Eliminando posibles archivos temporales...
+    rm -f /tmp/linux-$$-*
+    echo $CURRENTUSER
+}
+
+view_log() {
+    DOMAIN=$1
+    HOST=$2
+    LC_HOME="${LC_HOME:-/data/linuxconnect}"
+    LOGDIR="$LC_HOME/log/$DOMAIN/$HOST/"
+    GOT_LOGS=0
+
+    echo -n "--menu \"View logs for $HOST\" 20 50 10 " >/tmp/linux-$$-logs
+    for a in $(ls -t $LOGDIR); do
+        echo "$a \"\"" >>/tmp/linux-$$-logs
+        GOT_LOGS=1
+    done
+    if [ "$GOT_LOGS" -eq 1 ]; then
+        FILE=$(dialog --stdout --file /tmp/linux-$$-logs)
+        if [ $? -eq 0 ]; then
+            less -r -f "$LOGDIR/$FILE"
+        fi
+    else
+        dialog --msgbox "No log files for for $HOST" 10 50
+    fi
+}
+
+connect() {
+    DOMAIN=$1
+    HOST=$2
+    CURRENTUSER=$3
+    export LC_USER="$CURRENTUSER"
+    $WD/lc.php $DOMAIN $HOST >$SCRIPT
+
+    if [ ! -z $? ]; then
+        /usr/bin/expect -f $SCRIPT
+    fi
+
+    rm -f $SCRIPT
+}
+
+WD=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT=/tmp/linux-$$-connect
+>$SCRIPT
+chmod 600 $SCRIPT
+
+if [ -z "$DOMAIN" ]; then
+    dialog.php >/tmp/linux-$$-domains
+    DOMAIN=$(dialog --stdout --file "/tmp/linux-$$-domains")
+    RES=$?
+    if [ "$RES" -eq 1 ]; then
+        exit
+    fi
+fi
+rm -f /tmp/linux-$$-domains
+
+if [ -z "$HOST" ]; then
+    dialog.php $DOMAIN >/tmp/linux-$$-hosts
+    HOST=$(dialog --stdout --extra-button --extra-label "View log" --file "/tmp/linux-$$-hosts")
+    RES=$?
+    rm -f /tmp/linux-$$-hosts
+    if [ "$RES" -eq 1 ]; then
+        exit
+    fi
+
+    if [ "$RES" -eq 3 ]; then
+        view_log $DOMAIN $HOST
+        exit
+    fi
+
+    if [ "$RES" -eq 0 ]; then
+        if [ -z "$SSHUSER" ]; then
+            SSHUSER=$(dialog --stdout --inputbox "Usuario SSH (incluye saltos/hop)" 8 60 "lunix")
+            [ $? -ne 0 ] && exit
+        fi
+        connect $DOMAIN $HOST "$SSHUSER"
+        exit
+    fi
+fi
+
+if [ -z "$SSHUSER" ]; then
+    SSHUSER=$(dialog --stdout --inputbox "Usuario SSH (incluye saltos/hop)" 8 60 "lunix")
+    [ $? -ne 0 ] && exit
+fi
+
+connect $DOMAIN $HOST "$SSHUSER"

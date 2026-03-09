@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config version="0.4">
+   <passwords src="/data/linuxconnect/config/clients_passwords.csv.asc" />
+   <domain id="CLIENTE" comment="Soluciones GNU/Linux">
+      <host id="firewall" comment="Firewalls" ip="" port="23242" />
+      <host id="pve" comment="PVE" ip="" hop="CLIENTE/firewall" /> 
+      <host id="docker" comment="Dockers" ip="" port="23242" hop="CLIENTE/firewall" />
+   </domain>
+</config>

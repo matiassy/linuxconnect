@@ -1,0 +1,95 @@
+#!/usr/bin/expect -f
+
+set timeout 300
+log_user 1 
+spawn "/bin/bash"
+set shell $spawn_id
+expect {
+  -re "\[\#|\$\]" {
+        set LOGDIR "{LC_HOME}/log/{DOMAIN}/{COMPUTER}/"
+    send "mkdir -p -m 775 $LOGDIR\r"
+    send "clear;\r"
+  }
+}
+
+#<!-- BEGIN connect -->
+expect {
+    # Conexion Inicial
+    -re "\[\#|'\: '|\$\]" {
+        send "ssh -p {PORT} -o PubkeyAuthentication=no -o StrictHostKeyChecking=no {USER}@{HOST};exit\r"
+    }
+}
+expect {
+    timeout {
+        exit
+    }
+    # Conexion contra HOST detrás de Mikrotik (este no tira fallo de contraseña)
+    -re "(\] \>)" {
+        send "/system ssh {HOST} user={USER} port={PORT}\r"
+        expect {
+            -nocase "password:" {
+                send "{PASSWORD}\r"
+            }
+        }
+    }
+    # Conexiones contra HOST detrás de Linux/PfSense
+    -re "(.*assword:.*|.ontraseña:|.assword for.*)" {
+        send "{PASSWORD}\r"
+        expect {
+            -re "(Authentication failure|Permission denied)" {
+                exit    
+            }
+            # PfSense
+            -re "(^((?!http).)*:)" {
+            }
+            # Linux
+            -re "(.*:.*\$|.*:.*#|.*\].*)" {
+            }
+        }
+    }
+}
+#<!-- END connect -->
+
+#<!-- BEGIN root -->
+send "su - {ROOT};exit\r"
+expect {
+    timeout {
+        exit
+    }
+    # Conexion contra HOST detrás de Mikrotik (este no tira fallo de contraseña)
+    -re "(\] \>)" {
+        send "system ssh user=admin address=127.0.0.1 port={PORT}\r"
+        expect {
+            -nocase "password:" {
+                send "{ROOTPASSWORD}\r"
+                expect {
+                    -re "(\] \>)" {
+                    }
+                }
+            }
+        }
+    }
+    # Conexiones contra HOST detrás de Linux/PfSense
+    -re "(.assword:|.ontraseña:|.assword for.*)" {
+        send "{ROOTPASSWORD}\r"
+        expect {
+            -re "(Authentication failure|Permission denied)" {
+                exit    
+            }
+            # PfSense
+            -nocase "*** Welcome to pfSense" {
+                send "8\r"
+            }
+            # Linux
+            -re "(.*:.*\$|.*:.*#|.*\].*)" {
+            }    
+        }
+    }
+}
+
+log_user 1
+send "\r"
+log_file "$LOGDIR/[exec date +%F.%H.%M].log"
+#<!-- END root -->
+
+interact

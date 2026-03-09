@@ -1,0 +1,28 @@
+services:
+  docker-lc:
+    image: ghcr.io/matiassy/linuxconnect:2.0.1
+    container_name: docker-lc
+    hostname: docker-lc
+    restart: 'unless-stopped'
+    ports:
+      - '127.0.0.1:14350-14355:14350-14355/tcp'
+    volumes:
+      - ./backend/usr/local/sbin/:/usr/local/sbin/ #:z
+      - ./backend/config/:/data/linuxconnect/config/ #:z
+      - ./backend/log/:/data/linuxconnect/log/ #:z
+      - ./backend/root/.gnupg/:/root/.gnupg/ #:z
+    tty: true
+    environment:
+      - PUID=165536
+      - PGID=165536
+      - LC_HOME=/data/linuxconnect
+
+    networks:
+      lc_net:
+        ipv4_address: 10.89.0.20
+
+networks:
+  lc_net:
+    ipam:
+      config:
+        - subnet: "10.89.0.0/24"

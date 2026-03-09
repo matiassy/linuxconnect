@@ -1,0 +1,19 @@
+#!/bin/bash
+
+LC_HOME="${LC_HOME:-/data/linuxconnect}"
+ENCRYPTED="$LC_HOME/config/clients_passwords.csv.asc"
+FILE=/tmp/$(basename $0)-$$
+gpg -d -o $FILE $ENCRYPTED
+chmod 600 $FILE
+touch $FILE.lock
+nano $FILE
+if [ "$FILE" -nt "$FILE.lock" ]; then
+  gpg \
+    -r myaccuzzi@lunix.com.ar \
+    -a -o "$ENCRYPTED" -e "$FILE"
+else
+  echo "No se realizaron modificaciones"
+fi
+
+rm -f $FILE
+rm -f $FILE.lock

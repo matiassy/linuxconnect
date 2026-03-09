@@ -1,0 +1,4 @@
+#!/bin/bash
+
+LC_HOME="${LC_HOME:-/data/linuxconnect}"
+nano "$LC_HOME/config/config.xml"
