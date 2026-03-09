@@ -5,7 +5,7 @@ services:
     hostname: docker-lc
     restart: 'unless-stopped'
     ports:
-      - '127.0.0.1:14350-14355:14350-14355/tcp'
+      - '127.0.0.1:14360-14365:14360-14365/tcp'
     volumes:
       - ./backend/usr/local/sbin/:/usr/local/sbin/ #:z
       - ./backend/config/:/data/linuxconnect/config/ #:z
@@ -19,10 +19,10 @@ services:
 
     networks:
       lc_net:
-        ipv4_address: 10.89.0.20
+        ipv4_address: 10.89.1.20
 
 networks:
   lc_net:
     ipam:
       config:
-        - subnet: "10.89.0.0/24"
+        - subnet: "10.89.1.0/24"
