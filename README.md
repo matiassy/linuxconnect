@@ -191,6 +191,9 @@ Podrá descifrar `passwords.csv.asc` con su propia llave privada.
 
 LinuxConnect incluye una interfaz web para gestionar clientes y contraseñas sin necesidad de usar la terminal.
 
+<img width="1415" height="905" alt="image" src="https://github.com/user-attachments/assets/b44b0d68-2a54-4858-8b8c-ac5a953b27c4" />
+
+
 ### Descripción
 
 Es una aplicación React (compilada con Vite) servida por un backend Express en Node.js. La autenticación se basa en GPG: el usuario ingresa su passphrase GPG, el servidor intenta descifrar `passwords.csv.asc`, y si tiene éxito emite un JWT válido por **8 horas**.
