@@ -298,3 +298,10 @@ Para los cambios que se generen a nivel de imagen, se debe hacer un push a GitHu
 
         make build  # Construir imagen
         make push   # Subir imagen
+
+
+### Créditos
+
+[MaximilianoBz](https://github.com/MaximilianoBz)
+[avillalba96](https://github.com/avillalba96)
+[matiassy](https://github.com/matiassy)
