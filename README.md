@@ -7,9 +7,11 @@
 4. Configuración en github
 5. Directorio de trabajo
 6. Clonar repositorio
-7. Agregar un Nuevo Usuario
-8. Solución de Problemas
-9. Extras
+7. Mini Tutorial
+8. Agregar un Nuevo Usuario
+9. Interfaz Web
+10. Solución de Problemas
+11. Extras
 
 
 
@@ -113,21 +115,21 @@ El modo de conexión se detecta automáticamente según lo que haya cargado en `
 
 ```
 # Flujo normal: tux con password, luego su a root
-MILICIC,sro-zab01,tux,miPasswordDeTux
-MILICIC,sro-zab01,root,miPasswordDeRoot
+ACME,srv-prod01,tux,<password_de_tux>
+ACME,srv-prod01,root,<password_de_root>
 
 # Root directo con password (sin usuario intermedio)
-MILICIC,sro-zab01,root,miPasswordDeRoot
+ACME,srv-prod01,root,<password_de_root>
 
 # Llave SSH como tux, luego su a root con password
-MILICIC,sro-zab01,tux,
-MILICIC,sro-zab01,root,miPasswordDeRoot
+ACME,srv-prod01,tux,
+ACME,srv-prod01,root,<password_de_root>
 
 # Llave SSH directo como root (sin password)
-MILICIC,sro-zab01,root,
+ACME,srv-prod01,root,
 
 # Llave SSH como tux, sin escalar a root
-MILICIC,sro-zab01,tux,
+ACME,srv-prod01,tux,
 ```
 
 > La llave SSH tiene que estar cargada en el agente del contenedor (`~/.ssh/`) y autorizada en el equipo destino.
@@ -156,7 +158,7 @@ El círculo de confianza GPG se gestiona desde un único archivo CSV:
 Formato del archivo:
 
         # nombre,email,fingerprint
-        myaccuzzi,matiasyaccuzzi@gmail.com.ar,386AE307FFD01133851C731FD549A6026A1ED3C5
+        usuario,usuario@mail.com,<FINGERPRINT_COMPLETO>
 
 ### Pasos para agregar un nuevo usuario
 
@@ -185,7 +187,78 @@ Podrá descifrar `passwords.csv.asc` con su propia llave privada.
 > Un usuario externo que baje el repositorio **no podrá descifrar** el archivo
 > ya que su llave no figura como destinataria.
 
-## 9 - Solución de Problemas
+## 9 - Interfaz Web
+
+LinuxConnect incluye una interfaz web para gestionar clientes y contraseñas sin necesidad de usar la terminal.
+
+### Descripción
+
+Es una aplicación React (compilada con Vite) servida por un backend Express en Node.js. La autenticación se basa en GPG: el usuario ingresa su passphrase GPG, el servidor intenta descifrar `passwords.csv.asc`, y si tiene éxito emite un JWT válido por **8 horas**.
+
+### Acceso
+
+Una vez levantado el stack con `make up`, la interfaz está disponible en:
+
+        http://localhost:3000
+
+> Solo accesible desde el host local (bind a `127.0.0.1`).
+
+### Autenticación
+
+El login requiere la **passphrase de la llave GPG** del usuario. No hay usuario/contraseña separados: si la llave GPG puede descifrar el archivo, la sesión se autoriza.
+
+### Funcionalidades
+
+| Sección | Descripción |
+|---|---|
+| **Clientes** | Visualizar y editar `clientes.xml` (dominios y equipos) |
+| **Contraseñas** | Visualizar y editar `passwords.csv.asc` (descifrado en tiempo real) |
+
+Los cambios en contraseñas se re-encriptan automáticamente para todos los destinatarios del círculo GPG antes de guardarse.
+
+### Variables de entorno
+
+| Variable | Valor por defecto | Descripción |
+|---|---|---|
+| `PASSWORDS_FILE` | `/etc/linux/passwords.csv.asc` | Archivo de contraseñas encriptado |
+| `CLIENTS_FILE` | `/etc/linux/clientes.xml` | Archivo de clientes XML |
+| `GPG_CIRCLE_FILE` | `/etc/linux/gpg-circle.csv` | Círculo de confianza GPG |
+| `JWT_SECRET` | (aleatorio al iniciar) | Secreto para firmar tokens JWT |
+
+### Estructura
+
+```
+frontend/web/
+├── server/          # Backend Express (Node.js)
+│   ├── index.js     # Entry point, rutas y middleware de auth
+│   ├── auth.js      # Login GPG + emisión de JWT
+│   ├── clients.js   # CRUD de clientes.xml
+│   └── passwords.js # CRUD de passwords.csv.asc (decrypt/encrypt GPG)
+└── src/             # Frontend React
+    ├── App.jsx
+    └── components/
+        ├── Login.jsx
+        ├── Clients.jsx
+        ├── Passwords.jsx
+        ├── Sidebar.jsx
+        └── Navbar.jsx
+```
+
+### API REST
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/auth` | Login (passphrase → JWT) |
+| `GET` | `/api/clients` | Obtener clientes (JSON) |
+| `PUT` | `/api/clients` | Guardar clientes |
+| `GET` | `/api/passwords` | Obtener contraseñas (descifradas) |
+| `PUT` | `/api/passwords` | Guardar contraseñas (re-encriptadas) |
+
+Todas las rutas salvo `/api/auth` requieren el header `Authorization: Bearer <token>`.
+
+---
+
+## 10 - Solución de Problemas
 
 ### Error al firmar los commits con GPG
 
@@ -210,7 +283,7 @@ Verificar si el agente SSH está corriendo:
 
         ssh-add ~/.ssh/id_rsa
 
-## Extras
+## 11 - Extras
 
 ### Herramientas útiles
 
@@ -221,8 +294,4 @@ Verificar si el agente SSH está corriendo:
 Para los cambios que se generen a nivel de imagen, se debe hacer un push a GitHub y subirlo a ghcr.io.
 
         make build  # Construir imagen
-        make push   # Subir imagen# linuxconnect
-# linuxconnect
-# linuxconnect
-# linuxconnect
-# linuxconnect
+        make push   # Subir imagen
