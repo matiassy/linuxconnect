@@ -1,0 +1,23 @@
+#!/bin/bash
+
+ENCRYPTED=/etc/linux/passwords.csv.asc
+FILE=/tmp/$(basename $0)-$$
+gpg -d -o $FILE $ENCRYPTED
+chmod 600 $FILE
+touch $FILE.lock
+nano $FILE
+if [ "$FILE" -nt "$FILE.lock" ]; then
+  recipients=()
+  while IFS=',' read -r _nombre email _fpr; do
+    [[ "$_nombre" =~ ^#.*$ || -z "$_nombre" ]] && continue
+    recipients+=("-r" "$email")
+  done < /etc/linux/gpg-circle.csv
+  gpg \
+    "${recipients[@]}" \
+    -a -o "$ENCRYPTED" -e "$FILE"
+else
+  echo "No se realizaron modificaciones"
+fi
+
+rm -f $FILE
+rm -f $FILE.lock

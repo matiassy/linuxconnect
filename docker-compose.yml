@@ -1,0 +1,47 @@
+services:
+  linuxconnect:
+    image: ghcr.io/matiassy/linuxconnect:2.0.2
+    container_name: linuxconnect
+    hostname: linuxconnect
+    restart: 'unless-stopped'
+    ports:
+      - '127.0.0.1:14360-14365:14360-14365/tcp'
+    volumes:
+      - ./backend/etc/linux/:/etc/linux/ #:z
+      - ./backend/usr/local/sbin/:/usr/local/sbin/ #:z
+      - ./backend/opt/linux/log/:/opt/linux/log/ #:z
+      - ./backend/root/.gnupg/:/root/.gnupg/ #:z
+      - ./backend/root/.ssh/:/root/.ssh/ #:z
+    tty: true
+    environment:
+      - PUID=165536
+      - PGID=165536
+    networks:
+      lc_net:
+        ipv4_address: 10.90.0.20
+
+  linuxconnect-web:
+    build:
+      context: ./frontend/web
+      dockerfile: Dockerfile
+    container_name: linuxconnect-web
+    hostname: linuxconnect-web
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:3000:3000'
+    volumes:
+      - ./backend/etc/linux/:/etc/linux/:ro
+      - ./backend/root/.gnupg/:/root/.gnupg/:ro
+    environment:
+      - PASSWORDS_FILE=/etc/linux/passwords.csv.asc
+      - CLIENTS_FILE=/etc/linux/clientes.xml
+      - GPG_CIRCLE_FILE=/etc/linux/gpg-circle.csv
+    networks:
+      lc_net:
+        ipv4_address: 10.90.0.21
+
+networks:
+  lc_net:
+    ipam:
+      config:
+        - subnet: "10.90.0.0/24"

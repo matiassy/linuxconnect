@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config version="0.4">
+   <passwords src="/etc/linux/passwords.csv.asc" />
+   <domain id="CLIENTE" comment="Alguna descripcion">
+      <host id="host" comment="Servidor" ip="10.10.10.10" port="22" hop="" />
+   </domain>
+</config>
