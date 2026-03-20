@@ -301,9 +301,10 @@ Para los cambios que se generen a nivel de imagen, se debe hacer un push a GitHu
 
 
 ### Créditos
-
-[MaximilianoBz](https://github.com/MaximilianoBz)
-
-[avillalba96](https://github.com/avillalba96)
-
-[matiassy](https://github.com/matiassy)
+- [MaximilianoBz](https://github.com/MaximilianoBz)
+- [avillalba96](https://github.com/avillalba96)
+- [matiassy](https://github.com/matiassy)
+- [Pablito (Pablo Ramos)](https://github.com/matiassy)
+- [fgrismado](https://github.com/fgrismado)
+- [nicocesar](https://github.com/nicocesar)
+- [mmilne2ar](https://github.com/mmilne2ar)
